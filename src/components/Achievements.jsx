@@ -18,7 +18,7 @@ const achievements = [
 ];
 
 const Achievements = ({ user }) => {
-  const { t, theme } = useApp();
+  const { t, theme, language } = useApp();
   const [stats, setStats] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [newAchievement, setNewAchievement] = useState(null);
