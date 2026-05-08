@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import Icons from './Icons';
 import db from '../db';
+import PomodoroPresets from './PomodoroPresets';
 
 const Timer = ({ user, isCompleted, setIsCompleted }) => {
   const { t, theme } = useApp();
@@ -59,10 +60,16 @@ const Timer = ({ user, isCompleted, setIsCompleted }) => {
     return () => clearInterval(interval);
   }, [isRunning, currentTime]);
 
-  const completeSession = () => {
+  const completeSession = async () => {
     setIsRunning(false);
     setIsCompleted(true);
     playNotification();
+    
+    if (mode === 'focus' && user?.email) {
+      await db.incrementSession(user.email);
+      await db.addFocusTime(user.email, Math.floor(focusDuration / 60));
+    }
+    
     const newMode = mode === 'focus' ? 'break' : 'focus';
     const newDuration = newMode === 'focus' ? focusDuration : breakDuration;
     setMode(newMode);
@@ -170,6 +177,18 @@ const Timer = ({ user, isCompleted, setIsCompleted }) => {
           {t(mode)}
         </motion.span>
       </div>
+
+      <PomodoroPresets 
+        currentFocus={focusDuration} 
+        currentBreak={breakDuration}
+        onSelect={(focus, breakTime) => {
+          setFocusDuration(focus);
+          setBreakDuration(breakTime);
+          if (!isRunning) {
+            setCurrentTime(mode === 'focus' ? focus : breakTime);
+          }
+        }}
+      />
 
       <div className="flex flex-col items-center">
         <div className="relative w-[200px] h-[200px] mb-6">

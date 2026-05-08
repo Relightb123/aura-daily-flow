@@ -10,6 +10,12 @@ import Timer from './components/Timer';
 import Tasks from './components/Tasks';
 import Notes from './components/Notes';
 import Hydration from './components/Hydration';
+import Stats from './components/Stats';
+import Particles from './components/Particles';
+import QuoteCard from './components/QuoteCard';
+import Achievements from './components/Achievements';
+import WeatherWidget from './components/WeatherWidget';
+import QuickLinks from './components/QuickLinks';
 
 function AppContent() {
   const { t, theme, toggleTheme, language, toggleLanguage } = useApp();
@@ -57,10 +63,11 @@ function AppContent() {
   };
 
   return (
-    <div className={`min-h-screen p-6 md:p-8 lg:p-12 transition-colors duration-300 ${
+    <div className={`min-h-screen p-6 md:p-8 lg:p-12 transition-colors duration-300 relative overflow-hidden ${
       theme === 'dark' ? 'bg-[#09090b]' : 'bg-[#fafafa]'
     }`}>
-      <div className="max-w-[1400px] mx-auto">
+      <Particles />
+      <div className="max-w-[1400px] mx-auto relative z-10">
         <header className="mb-8 flex justify-between items-center">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
@@ -73,6 +80,8 @@ function AppContent() {
           </motion.h1>
 
           <div className="flex items-center gap-3">
+            <WeatherWidget />
+            
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -178,9 +187,15 @@ function AppContent() {
                 setIsCompleted={setTimerCompleted}
               />
             </div>
+            <Stats user={user} />
             <Tasks user={user} syncStatus={syncStatusRef} />
             <Hydration user={user} syncStatus={syncStatusRef} />
             <Notes user={user} syncStatus={syncStatusRef} />
+            <QuoteCard user={user} />
+            <Achievements user={user} />
+            <div className="md:col-span-2 lg:col-span-1">
+              <QuickLinks />
+            </div>
           </main>
         ) : (
           <motion.div

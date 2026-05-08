@@ -8,7 +8,15 @@ const defaultUserData = {
   tasks: [],
   notes: '',
   hydration: { glasses: 0, lastDate: null, eyeRestLastDate: null },
-  timerSettings: { focusDuration: 25 * 60, breakDuration: 5 * 60, mode: 'focus' }
+  timerSettings: { focusDuration: 25 * 60, breakDuration: 5 * 60, mode: 'focus' },
+  stats: {
+    totalSessions: 0,
+    totalFocusTime: 0,
+    completedTasks: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActiveDate: null
+  }
 };
 
 const users = new Map();
@@ -225,11 +233,59 @@ export const db = {
     return this.getData(userEmail, 'timerSettings');
   },
 
+  async saveStats(userEmail, stats) {
+    const user = users.get(userEmail);
+    if (user) {
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      
+      if (stats.totalSessions > (user.stats?.totalSessions || 0)) {
+        stats.lastActiveDate = today;
+        if (user.stats?.lastActiveDate === yesterday) {
+          stats.currentStreak = (user.stats?.currentStreak || 0) + 1;
+        } else if (user.stats?.lastActiveDate !== today) {
+          stats.currentStreak = 1;
+        }
+        if (stats.currentStreak > (user.stats?.longestStreak || 0)) {
+          stats.longestStreak = stats.currentStreak;
+        }
+      }
+      
+      user.stats = { ...user.stats, ...stats };
+    }
+    return this.syncData(userEmail, 'stats', user?.stats || {});
+  },
+
+  async getStats(userEmail) {
+    return this.getData(userEmail, 'stats');
+  },
+
+  async incrementSession(userEmail) {
+    const user = users.get(userEmail);
+    if (!user) return { success: false };
+    
+    const stats = user.stats || { totalSessions: 0, totalFocusTime: 0, completedTasks: 0, currentStreak: 0, longestStreak: 0, lastActiveDate: null };
+    stats.totalSessions += 1;
+    
+    return this.saveStats(userEmail, stats);
+  },
+
+  async addFocusTime(userEmail, minutes) {
+    const user = users.get(userEmail);
+    if (!user) return { success: false };
+    
+    const stats = user.stats || { totalSessions: 0, totalFocusTime: 0, completedTasks: 0, currentStreak: 0, longestStreak: 0, lastActiveDate: null };
+    stats.totalFocusTime += minutes;
+    
+    return this.saveStats(userEmail, stats);
+  },
+
   async exportUserData(userEmail) {
     const tasks = await this.getTasks(userEmail);
     const notes = await this.getNotes(userEmail);
     const hydration = await this.getHydration(userEmail);
     const timerSettings = await this.getTimerSettings(userEmail);
+    const stats = await this.getStats(userEmail);
 
     return {
       success: true,
@@ -238,7 +294,8 @@ export const db = {
         tasks: tasks.data,
         notes: notes.data,
         hydration: hydration.data,
-        timerSettings: timerSettings.data
+        timerSettings: timerSettings.data,
+        stats: stats.data
       }
     };
   },
@@ -250,6 +307,7 @@ export const db = {
     Storage.remove(`${STORAGE_PREFIX}notes_${userEmail}`);
     Storage.remove(`${STORAGE_PREFIX}hydration_${userEmail}`);
     Storage.remove(`${STORAGE_PREFIX}timerSettings_${userEmail}`);
+    Storage.remove(`${STORAGE_PREFIX}stats_${userEmail}`);
     return { success: true };
   }
 };
