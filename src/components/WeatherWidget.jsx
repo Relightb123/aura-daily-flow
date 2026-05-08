@@ -12,7 +12,7 @@ const weatherIcons = {
 
 const WeatherWidget = () => {
   const { t, theme } = useApp();
-  const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState({ temp: null, condition: 'sunny' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const WeatherWidget = () => {
 
   if (loading) return null;
 
-  const IconComponent = Icons[weatherIcons[weather?.condition] || 'Sun'] || Icons.Sun;
+  const IconComponent = Icons[weatherIcons[weather.condition] || 'Sun'] || Icons.Sun;
 
   return (
     <motion.div
@@ -65,7 +65,7 @@ const WeatherWidget = () => {
     >
       <IconComponent className={`w-5 h-5 ${theme === 'dark' ? 'text-[#fbbf24]' : 'text-orange-500'}`} />
       <div>
-        {weather?.temp !== null ? (
+        {weather.temp !== null ? (
           <p className={`text-sm font-medium ${theme === 'dark' ? 'text-[#fafafa]' : 'text-[#18181b]'}`}>
             {weather.temp}°C
           </p>
