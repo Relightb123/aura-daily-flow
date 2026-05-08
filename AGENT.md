@@ -1,0 +1,1 @@
+use svg instead of emojis
