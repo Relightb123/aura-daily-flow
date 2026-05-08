@@ -19,7 +19,23 @@ const defaultUserData = {
   }
 };
 
-const users = new Map();
+const loadUsers = () => {
+  const stored = localStorage.getItem('aura_users');
+  if (stored) {
+    try {
+      return new Map(JSON.parse(stored));
+    } catch (e) {
+      return new Map();
+    }
+  }
+  return new Map();
+};
+
+const saveUsers = (usersMap) => {
+  localStorage.setItem('aura_users', JSON.stringify([...usersMap]));
+};
+
+let users = loadUsers();
 
 export const db = {
   async login(email, password) {
@@ -98,6 +114,7 @@ export const db = {
     };
 
     users.set(safeEmail, { ...user, ...defaultUserData });
+    saveUsers(users);
 
     const token = Encryption.generateToken();
     user.token = token;
@@ -160,6 +177,7 @@ export const db = {
       version: '1.0'
     });
 
+    saveUsers(users);
     return { success: true, timestamp: Date.now() };
   },
 
@@ -302,6 +320,7 @@ export const db = {
 
   async deleteAccount(userEmail) {
     users.delete(userEmail);
+    saveUsers(users);
     Storage.remove(`user_session_${userEmail}`);
     Storage.remove(`${STORAGE_PREFIX}tasks_${userEmail}`);
     Storage.remove(`${STORAGE_PREFIX}notes_${userEmail}`);
